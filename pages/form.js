@@ -1,58 +1,69 @@
 import React, { useState } from "react";
-import { Formik, Field, Form, yupToFormErrors, FieldArray } from "formik";
+import {
+  Formik,
+  Field,
+  Form,
+  yupToFormErrors,
+  FieldArray,
+  ErrorMessage,
+} from "formik";
 import Label from "./components/label";
 import * as Yup from "yup";
 import CustomSelect from "./components/selectcust";
 import SelectKota from "./components/selectKota";
 import SwitchPph from "./components/switchPph";
 import { Button, Switch } from "@mui/material";
-
+import Upload from "./components/upload";
+import Calender from "./components/Calender";
 const FormikReal = () => {
+  // const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/png'];
   const SignupSchema = Yup.object().shape({
-    // logo: Yup.string().required("name is required !"),
-    // nama: Yup.string()
-    //   .min(8, "Must be more than 8 characters")
-    //   .required("name is required !"),
-    // kodePerusahaan: Yup.number()
-    //   .min(1000, "Must be more than 3 characters")
-    //   .required("name is required !"),
-    // telp: Yup.number().required("name is required !"),
-    // alamat: Yup.string()
-    //   .max(140, "character is limit")
-    //   .required("Alamat is required "),
-    // kotaId: Yup.number().required("kotaId is required"),
-    // fax: Yup.number().required("Fax is required !"),
-    // kodePos: Yup.number()
-    //   .max(100000, "ga boleh lebih dari 5 karakter")
-    //   .required("Kode pos is required !"),
-    // pph: Yup.string(),
-    // pakta: Yup.string(),
-    // status: Yup.number(),
-    // tanggalmulai: Yup.date().required("startdate is required !"),
-    // tanggalselesai: Yup.date()
-    //   .required("startdate is required !")
-    //   .min(
-    //     Yup.ref("tanggalmulai"),
-    //     ({ min }) => `Date needs to be before start date!!`
-    //   ),
-    // radioButton: Yup.string().required("radioButton is required !"),
+    logo: Yup.mixed()
+      .required("Logo is Required!")
+      .test(
+        "fileSize",
+        "Your file is too big :(",
+        (value) => value && value.size <= 1024 * 1024
+        //1kb
+      ),
+    nama: Yup.string()
+      .min(8, "Must be more than 8 characters")
+      .required("name is required !"),
+    kodePerusahaan: Yup.number()
+      .min(1000, "Must be more than 3 characters")
+      .required("name is required !"),
+    telp: Yup.number().required("name is required !"),
+    alamat: Yup.string()
+      .max(140, "character is limit")
+      .required("Alamat is required "),
+    kotaId: Yup.number().required("kotaId is required"),
+    fax: Yup.number().required("Fax is required !"),
+    kodePos: Yup.number()
+      .max(100000, "ga boleh lebih dari 5 karakter")
+      .required("Kode pos is required !"),
+    pph: Yup.string(),
+    pakta: Yup.string(),
+    status: Yup.number(),
+    tanggalmulai: Yup.date().required("startdate is required !"),
+    tanggalselesai: Yup.date()
+      .required("startdate is required !")
+      .min(
+        Yup.ref("tanggalmulai"),
+        ({ min }) => `Date needs to be before start date!!`
+      ),
+    radioButton: Yup.string().required("radioButton is required !"),
     sertifikasi: Yup.array().of(
       Yup.object().shape({
         title: Yup.string().required("Required"),
         startDate: Yup.date().required("startdate is required !"),
-        endDate: Yup.date()
-          .required("startdate is required !")
-          .min(
-            Yup.ref("startDate"),
-            ({ min }) => `Date needs to be before start date!!`
-          ).required('Must have friends') // these constraints are shown if and only if inner constraints are satisfied
-          .min(3, 'Minimum of 3 friends'),
+        endDate: Yup.date().required("startdate is required !")
+        .min(
+          Yup.ref("startDate"),
+          ({ min }) => `Date needs to be after start date!!`
+        )
       })
     ),
   });
-
- 
-
 
   return (
     <div>
@@ -133,16 +144,26 @@ const FormikReal = () => {
             resetForm({ values: "" });
           }}
         >
-          {({ errors, touched, values, setFieldValue }) => (
+          {({
+            errors,
+            touched,
+            values,
+            setFieldValue,
+            handleBlur,
+            handleSubmit,
+          }) => (
             <Form className="px-11 md:px-20">
               {/* logo Perusahaan */}
               <div className=" mt-1 flex flex-col  my-2">
-                <Label htmlFor="logo"> Nama Perusahaan </Label>
+                <Label htmlFor="logo"> logo Perusahaan </Label>
                 <Field
                   className="border p-1.5 placeholder:text-xs"
-                  type="file"
-                  id="logo"
+                  // type="file"
+                  // id="logo"
                   name="logo"
+                  component={Upload}
+                  setFieldValue={setFieldValue}
+                  onBlur={handleBlur}
                 />
                 {errors.logo && touched.logo ? (
                   <div className=" text-red-500 w-full text-xs">
@@ -379,12 +400,11 @@ const FormikReal = () => {
                               placeholder="title"
                               className="border mb-2 p-1.5"
                             />
-                            {errors.sertifikasi &&
-                            touched.sertifikasi? (
-                              <div className=" text-red-500 w-full text-xs">
-                                {errors.sertifikasi}
-                              </div>
-                            ) : null}
+                            <div className=" text-red-500 w-full text-xs mb-2">
+                              <ErrorMessage
+                                name={`sertifikasi.${index}.title`}
+                              />
+                            </div>
                             <div className="grid-cols-2 w-full  ">
                               <Field
                                 type="date"
@@ -392,13 +412,22 @@ const FormikReal = () => {
                                 placeholder="start date"
                                 className="border mb-2 mr-3 w-5/12 p-3 text-xs"
                               />
-
+                              <div className=" text-red-500 w-full text-xs mb-2">
+                                <ErrorMessage
+                                  name={`sertifikasi.${index}.startDate`}
+                                />
+                              </div>
                               <Field
                                 type="date"
                                 name={`sertifikasi.${index}.endDate`}
                                 placeholder="end Date"
                                 className="border mb-2  w-5/12 p-3 text-xs"
                               />
+                                <div className=" text-red-500 w-full text-xs mb-2">
+                                <ErrorMessage
+                                  name={`sertifikasi.${index}.endDate`}
+                                />
+                              </div>
                             </div>
                             <div className="flex">
                               <button
@@ -408,7 +437,10 @@ const FormikReal = () => {
                               >
                                 x
                               </button>
-                              <button
+                             
+                            </div>
+                          </div>
+                        ))} <button
                                 type="button"
                                 className="p-1 h-auto  bg-blue-400 text-white w-36 text-sm"
                                 onClick={() =>
@@ -421,9 +453,6 @@ const FormikReal = () => {
                               >
                                 Add Sertifikasi
                               </button>
-                            </div>
-                          </div>
-                        ))}
                     </div>
                   )}
                 </FieldArray>
@@ -480,6 +509,8 @@ const FormikReal = () => {
                     Firma
                   </label>
                 </div>
+
+                <Calender/>
 
                 {errors.radioButton && touched.radioButton ? (
                   <div className=" text-red-500 w-full text-xs">

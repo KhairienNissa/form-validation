@@ -8,6 +8,7 @@ import CustomSelect from "./components/selectcust";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import SelectKota from "./components/selectKota";
+import Calender from "./components/Calender";
 
 export default function Home() {
   const [state, setState] = useState(Kota);
@@ -28,6 +29,19 @@ export default function Home() {
   const [kodepos, setKodePos] = useState();
   const [kodePerusahaan, setKodePerusahaan] = useState();
   const [kotaId, setKotaId] = useState();
+
+  const [date, setDate] = useState({
+    Fromdate: new Date().toISOString().slice(0,10),
+    Todate: new Date().toISOString().slice(0,10)
+  })
+
+ const FromdateOnchange = (e) => {
+    setDate({Fromdate:e.target.value})
+  }
+
+ const TodateOnchange = (e) => {
+    setDate({Todate:e.target.value})
+  }
 
   const StatusUpdate = (data) => {
     setStatus(data);
@@ -285,6 +299,10 @@ export default function Home() {
 
               <CustomSelect setStatus={setStatus} status={status} />
             </div>
+
+            {/* calender */}
+            <Calender
+            stateFrom={date.Fromdate} stateTo={date.Todate} FromDate={FromdateOnchange} ToDate={TodateOnchange}/>
 
             {/* tombol */}
             <button
