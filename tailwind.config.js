@@ -5,7 +5,13 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      // backgroundImage: {
+      //   "buildingsatu": "url('../public/buldingsatu.jpg')",
+      //   "buildingdua": "url('../public/buildingdua.jpg')",
+      // },
+    },
+   
   },
   plugins: [],
-}
+};

@@ -17,7 +17,7 @@ const  Upload = (props) => {
 
   return (
     <form>
-      <input
+      <input 
         name={props.field.name}
         className="border w-full"
         type="file"

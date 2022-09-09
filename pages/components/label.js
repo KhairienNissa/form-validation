@@ -1,9 +1,10 @@
 import React from 'react'
 
+
 function Label({children}) {
   return (
     <div>
-        <label className="text-gray-600 text-md pb-3" htmlFor="image">{children}</label>
+        <label className="text-[#A48668] text-sm font-bold pb-3" htmlFor="image">{children}</label>
     </div>
   )
 }

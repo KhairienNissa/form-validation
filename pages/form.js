@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Formik,
   Field,
@@ -15,8 +15,11 @@ import SwitchPph from "./components/switchPph";
 import { Button, Switch } from "@mui/material";
 import Upload from "./components/upload";
 import Calender from "./components/Calender";
+
 const FormikReal = () => {
   // const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/png'];
+  const [state, setState] = useState();
+
   const SignupSchema = Yup.object().shape({
     logo: Yup.mixed()
       .required("Logo is Required!")
@@ -44,30 +47,64 @@ const FormikReal = () => {
     pph: Yup.string(),
     pakta: Yup.string(),
     status: Yup.number(),
-    tanggalmulai: Yup.date().required("startdate is required !"),
-    tanggalselesai: Yup.date()
-      .required("startdate is required !")
-      .min(
-        Yup.ref("tanggalmulai"),
-        ({ min }) => `Date needs to be before start date!!`
-      ),
+
     radioButton: Yup.string().required("radioButton is required !"),
     sertifikasi: Yup.array().of(
       Yup.object().shape({
         title: Yup.string().required("Required"),
         startDate: Yup.date().required("startdate is required !"),
-        endDate: Yup.date().required("startdate is required !")
-        .min(
-          Yup.ref("startDate"),
-          ({ min }) => `Date needs to be after start date!!`
-        )
+        endDate: Yup.date()
+          .required("startdate is required !")
+          .min(
+            Yup.ref("startDate"),
+            ({ min }) => `Date needs to be after start date!!`
+          ),
       })
     ),
+
+    password: Yup.string()
+      .min(8, "Password must be at least 6 charaters")
+      .matches(/[0-9]/, "Password requires a number")
+      .matches(/[a-z]/, "Password requires a lowercase letter")
+      .matches(/[A-Z]/, "Password requires an uppercase letter")
+      .matches(/[^\w]/, "Password requires a symbol")
+      // .matches(
+      //   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      //   "Must Contain 8 Characters, One Uppercase, One Lowercase, One Number and one special case Character"
+      // )
+      .required("Password is Required!"),
+    confirmPassword: Yup.string().oneOf(
+      [Yup.ref("password"), null],
+      "Your Confirm Password mush match"
+    ),
+    fromDate: Yup.date().required("start date is required"),
+    tooDate: Yup.date()
+      .when("fromDate", (fromDate, schema) => {
+        return schema.test({
+          test: (tooDate) => new Date(fromDate) < new Date(tooDate),
+          message: "tooDate should be > fromDate",
+        });
+      })
+      .required(),
   });
 
+  function formatDate(date) {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0];
+  }
+
+  function addDays(_date, days) {
+    const date = new Date(_date);
+
+    date.setDate(date.getDate() + days);
+
+    return date;
+  }
+
   return (
-    <div>
-      <div className="w-auto h-full pb-24 rounded- bg-white mx-2 lg:mx-72 my-2">
+    <div className="bg-[url('../public/buldingsatu.jpg')] w-[100%] bg-center h-[100vh]">
+      <div className="w-auto h-[100vh] pb-24 rounded- bg-white mx-2 lg:mx-72 my-2 overflow-scroll">
         <div className="text-center text-2xl pt-4">Add Perusahaan</div>
         <Formik
           initialValues={{
@@ -84,13 +121,14 @@ const FormikReal = () => {
             status: "",
             warna: {},
             sertifikasi: [{ title: "", startDate: "", endDate: "" }],
-            tanggalmulai: "",
-            tanggalselesai: "",
             radioButton: "",
+            date: "",
+            password: "",
+            confirmPassword: "",
           }}
           validationSchema={SignupSchema}
           onSubmit={(values, { resetForm }) => {
-            console.log(
+            setState(
               "nama :",
               values.nama,
               "\n",
@@ -128,14 +166,21 @@ const FormikReal = () => {
               "warna :",
               values.warna,
               "\n",
-              "tanggal mulai :",
-              values.tanggalmulai,
-              "\n",
-              "tanggal selesai :",
-              values.tanggalselesai,
-              "\n",
+
               "sertifikasi :",
               values.sertifikasi,
+              "\n",
+              "password :",
+              values.password,
+              "\n",
+              "confirm password :",
+              values.confirmPassword,
+              "\n",
+              "confirm password :",
+              values.fromDate,
+              "\n",
+              "confirm password :",
+              values.tooDate,
               "\n",
               "jenis perusahaan :",
               values.radioButton
@@ -184,6 +229,41 @@ const FormikReal = () => {
                 {errors.nama && touched.nama ? (
                   <div className=" text-red-500 w-full text-xs">
                     {errors.nama}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* password Perusahaan */}
+              <div className=" mt-1 flex flex-col  my-2">
+                <Label htmlFor="password"> Password Perusahaan </Label>
+                <Field
+                  className="border p-1.5 placeholder:text-xs"
+                  type="password"
+                  id="password"
+                  name="password"
+                />
+                {errors.password && touched.password ? (
+                  <div className=" text-red-500 w-full text-xs">
+                    {errors.password}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* konfirm password Perusahaan */}
+              <div className=" mt-1 flex flex-col  my-2">
+                <Label htmlFor="confirmPassword">
+                  {" "}
+                  Konfirmasi Password Perusahaan{" "}
+                </Label>
+                <Field
+                  className="border p-1.5 placeholder:text-xs"
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                />
+                {errors.confirmPassword && touched.confirmPassword ? (
+                  <div className=" text-red-500 w-full text-xs">
+                    {errors.confirmPassword}
                   </div>
                 ) : null}
               </div>
@@ -282,7 +362,6 @@ const FormikReal = () => {
               </div>
 
               {/* pph */}
-
               <div className="flex  my-2">
                 <div className="justify-start flex w-full">
                   <Label>Pakta Integritas</Label>
@@ -302,13 +381,9 @@ const FormikReal = () => {
                     {values.pakta === "ya" ? "Yes" : "no"}{" "}
                   </div>
                 </div>
-                {/* {errors.pakta && touched.pakta ? (
-                  <div className=" text-red-500 w-full text-xs">{errors.pakta}</div>
-                ) : null} */}
               </div>
 
               {/* pph */}
-
               <div className="flex -mt-4">
                 <div className="justify-start flex w-full">
                   <Label>PPH Agreement</Label>
@@ -406,6 +481,9 @@ const FormikReal = () => {
                               />
                             </div>
                             <div className="grid-cols-2 w-full  ">
+                            <label >
+                              Start Date
+                            </label>{" "}
                               <Field
                                 type="date"
                                 name={`sertifikasi.${index}.startDate`}
@@ -423,7 +501,7 @@ const FormikReal = () => {
                                 placeholder="end Date"
                                 className="border mb-2  w-5/12 p-3 text-xs"
                               />
-                                <div className=" text-red-500 w-full text-xs mb-2">
+                              <div className=" text-red-500 w-full text-xs mb-2">
                                 <ErrorMessage
                                   name={`sertifikasi.${index}.endDate`}
                                 />
@@ -437,51 +515,53 @@ const FormikReal = () => {
                               >
                                 x
                               </button>
-                             
                             </div>
                           </div>
-                        ))} <button
-                                type="button"
-                                className="p-1 h-auto  bg-blue-400 text-white w-36 text-sm"
-                                onClick={() =>
-                                  push({
-                                    title: "",
-                                    startDate: "",
-                                    endDate: "",
-                                  })
-                                }
-                              >
-                                Add Sertifikasi
-                              </button>
+                        ))}{" "}
+                      <button
+                        type="button"
+                        className="p-1 h-auto  bg-blue-400 text-white w-36 text-sm"
+                        onClick={() =>
+                          push({
+                            title: "",
+                            startDate: "",
+                            endDate: "",
+                          })
+                        }
+                      >
+                        Add Sertifikasi
+                      </button>
                     </div>
                   )}
                 </FieldArray>
               </div>
 
+              {/* tanggal */}
               <div className="grid-cols-2 w-full  ">
                 <Field
                   type="date"
-                  name="tanggalmulai"
+                  name="fromDate"
+                  min={formatDate(new Date())}
+                  max={
+                    values.tooDate && formatDate(addDays(values.tooDate, -1))
+                  }
                   placeholder="start date"
                   className="border mb-2 mr-3 w-5/12 p-3 text-xs"
                 />
-                {errors.tanggalmulai && touched.tanggalmulai ? (
-                  <div className=" text-red-500 w-full text-xs">
-                    {errors.tanggalmulai}
-                  </div>
-                ) : null}
+                <div className=" text-red-500 w-full text-xs mb-2">
+                  <ErrorMessage name="fromDate" />
+                </div>
 
                 <Field
                   type="date"
-                  name="tanggalselesai"
+                  name="tooDate"
                   placeholder="end Date"
+                  min={values.fromDate}
                   className="border mb-2  w-5/12 p-3 text-xs"
                 />
-                {errors.tanggalselesai && touched.tanggalselesai ? (
-                  <div className=" text-red-500 w-full text-xs">
-                    {errors.tanggalselesai}
-                  </div>
-                ) : null}
+                <div className=" text-red-500 w-full text-xs mb-2">
+                  <ErrorMessage name="tooDate" />
+                </div>
               </div>
 
               {/* jenis perusahaan */}
@@ -509,8 +589,6 @@ const FormikReal = () => {
                     Firma
                   </label>
                 </div>
-
-                <Calender/>
 
                 {errors.radioButton && touched.radioButton ? (
                   <div className=" text-red-500 w-full text-xs">
